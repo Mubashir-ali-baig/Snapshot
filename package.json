@@ -1,0 +1,16 @@
+{
+  "name": "unipilot-snapshot",
+  "license": "UNLICENSED",
+  "scripts": {
+    "codegen": "graph codegen",
+    "build": "graph build",
+    "deploy": "graph deploy --node https://api.thegraph.com/deploy/ --ipfs https://api.thegraph.com/ipfs/ mubashir-ali-baig/unipilot-snapshot",
+    "create-local": "graph create --node http://localhost:8020/ mubashir-ali-baig/unipilot-snapshot",
+    "remove-local": "graph remove --node http://localhost:8020/ mubashir-ali-baig/unipilot-snapshot",
+    "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 mubashir-ali-baig/unipilot-snapshot"
+  },
+  "dependencies": {
+    "@graphprotocol/graph-cli": "0.19.0",
+    "@graphprotocol/graph-ts": "0.19.0"
+  }
+}
