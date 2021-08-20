@@ -1,6 +1,6 @@
 specVersion: 0.0.2
 schema:
-  file: ./schema.graphql
+  file: schema.graphql
 dataSources:
   - kind: ethereum/contract
     name: Factory
@@ -19,14 +19,13 @@ dataSources:
         - PoolCreated
       abis:
         - name: Factory
-          file: ./abis/Factory.json
+          file: Factory/abis/Factory.json
         - name: ERC20
-          file: ./abis/ERC20.json
+          file: Factory/abis/ERC20.json
         - name: ERC20SymbolBytes
-          file: ./abis/ERC20SymbolBytes.json
+          file: Factory/abis/ERC20SymbolBytes.json
         - name: ERC20NameBytes
-          file: ./abis/ERC20NameBytes.json
-
+          file: Factory/abis/ERC20NameBytes.json
       eventHandlers:
         - event: FeeAmountEnabled(indexed uint24,indexed int24)
           handler: handleFeeAmountEnabled
@@ -34,7 +33,7 @@ dataSources:
           handler: handleOwnerChanged
         - event: PoolCreated(indexed address,indexed address,indexed uint24,int24,address)
           handler: handlePoolCreated
-      file: ./src/mapping.ts
+      file: Factory/Factory.wasm
   - kind: ethereum/contract
     name: NonfungiblePositionManager
     network: mainnet
@@ -46,25 +45,25 @@ dataSources:
       kind: ethereum/events
       apiVersion: 0.0.4
       language: wasm/assemblyscript
-      file: ./src/position-manager.ts
+      file: NonfungiblePositionManager/NonfungiblePositionManager.wasm
       entities:
         - Pool
         - Token
       abis:
         - name: NonfungiblePositionManager
-          file: ./abis/NonfungiblePositionManager.json
+          file: NonfungiblePositionManager/abis/NonfungiblePositionManager.json
         - name: Pool
-          file: ./abis/pool.json
+          file: NonfungiblePositionManager/abis/pool.json
         - name: Factory
-          file: ./abis/Factory.json
+          file: NonfungiblePositionManager/abis/Factory.json
         - name: ERC20
-          file: ./abis/ERC20.json
+          file: NonfungiblePositionManager/abis/ERC20.json
         - name: ERC20SymbolBytes
-          file: ./abis/ERC20SymbolBytes.json
+          file: NonfungiblePositionManager/abis/ERC20SymbolBytes.json
         - name: ERC20NameBytes
-          file: ./abis/ERC20NameBytes.json
+          file: NonfungiblePositionManager/abis/ERC20NameBytes.json
         - name: SnapshotHelper
-          file: ./abis/SnapshotHelper.json
+          file: NonfungiblePositionManager/abis/SnapshotHelper.json
       eventHandlers:
         - event: IncreaseLiquidity(indexed uint256,uint128,uint256,uint256)
           handler: handleIncreaseLiquidity
@@ -84,17 +83,17 @@ templates:
       kind: ethereum/events
       apiVersion: 0.0.4
       language: wasm/assemblyscript
-      file: ./src/core.ts
+      file: templates/Pool/Pool.wasm
       entities:
         - Pool
         - Token
       abis:
         - name: Pool
-          file: ./abis/pool.json
+          file: Pool/abis/pool.json
         - name: Factory
-          file: ./abis/Factory.json
+          file: Pool/abis/Factory.json
         - name: ERC20
-          file: ./abis/ERC20.json
+          file: Pool/abis/ERC20.json
       eventHandlers:
         - event: Initialize(uint160,int24)
           handler: handleInitialize

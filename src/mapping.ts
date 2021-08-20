@@ -1,58 +1,50 @@
-import { BigInt } from "@graphprotocol/graph-ts"
+import { Address, BigInt } from "@graphprotocol/graph-ts";
+import {
+  fetchTokenDecimals,
+  fetchTokenName,
+  fetchTokenSymbol,
+} from "./utils/token";
 import {
   Factory,
   FeeAmountEnabled,
   OwnerChanged,
-  PoolCreated
-} from "../generated/Factory/Factory"
-import { ExampleEntity } from "../generated/schema"
+  PoolCreated,
+} from "../generated/Factory/Factory";
+import { Pool as PoolTemplate } from "../generated/templates";
+import { Pool, Token } from "../generated/schema";
+import { PILOT_ADDRESS } from "./utils/constants";
 
-export function handleFeeAmountEnabled(event: FeeAmountEnabled): void {
-  // Entities can be loaded from the store using a string ID; this ID
-  // needs to be unique across all entities of the same type
-  let entity = ExampleEntity.load(event.transaction.from.toHex())
-
-  // Entities only exist after they have been saved to the store;
-  // `null` checks allow to create entities on demand
-  if (entity == null) {
-    entity = new ExampleEntity(event.transaction.from.toHex())
-
-    // Entity fields can be set using simple assignments
-    entity.count = BigInt.fromI32(0)
-  }
-
-  // BigInt and BigDecimal math are supported
-  entity.count = entity.count + BigInt.fromI32(1)
-
-  // Entity fields can be set based on event parameters
-  entity.fee = event.params.fee
-  entity.tickSpacing = event.params.tickSpacing
-
-  // Entities can be written to the store with `.save()`
-  entity.save()
-
-  // Note: If a handler doesn't require existing field values, it is faster
-  // _not_ to load the entity from the store. Instead, create it fresh with
-  // `new Entity(...)`, set the fields that should be updated and save the
-  // entity back to the store. Fields that were not set or unset remain
-  // unchanged, allowing for partial updates to be applied.
-
-  // It is also possible to access smart contracts from mappings. For
-  // example, the contract that has emitted the event can be connected to
-  // with:
-  //
-  // let contract = Contract.bind(event.address)
-  //
-  // The following functions can then be called on this contract to access
-  // state variables and other data:
-  //
-  // - contract.createPool(...)
-  // - contract.feeAmountTickSpacing(...)
-  // - contract.getPool(...)
-  // - contract.owner(...)
-  // - contract.parameters(...)
-}
+export function handleFeeAmountEnabled(event: FeeAmountEnabled): void {}
 
 export function handleOwnerChanged(event: OwnerChanged): void {}
 
-export function handlePoolCreated(event: PoolCreated): void {}
+export function handlePoolCreated(event: PoolCreated): void {
+  let token0 = Token.load(event.params.token0.toHexString());
+
+  let token1 = Token.load(event.params.token1.toHexString());
+
+  if (!token0) {
+    token0 = new Token(event.params.token0.toHexString());
+    token0.name = fetchTokenName(event.params.token0);
+    token0.symbol = fetchTokenSymbol(event.params.token0);
+    token0.decimals = fetchTokenDecimals(event.params.token0);
+  }
+  if (!token1) {
+    token1 = new Token(event.params.token1.toHexString());
+    token1.name = fetchTokenName(event.params.token1);
+    token1.symbol = fetchTokenSymbol(event.params.token1);
+    token1.decimals = fetchTokenDecimals(event.params.token1);
+  }
+
+  if (token0.id == PILOT_ADDRESS || token1.id == PILOT_ADDRESS) {
+    token0.save();
+    token1.save();
+    let pool = new Pool(event.params.pool.toHexString());
+    pool.token0 = token0.id;
+    pool.token1 = token1.id;
+    pool.feeTier = BigInt.fromI32(event.params.fee);
+    pool.tickSpacing = event.params.tickSpacing;
+    pool.save();
+    PoolTemplate.create(Address.fromString(pool.id));
+  }
+}
