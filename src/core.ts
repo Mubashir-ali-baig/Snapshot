@@ -19,8 +19,7 @@ import { BigDecimal, BigInt } from "@graphprotocol/graph-ts";
 
 export function handleInitialize(event: Initialize): void {}
 
-export function handleMint(event: MintEvent): void {
-}
+export function handleMint(event: MintEvent): void {}
 
 export function handleBurn(event: BurnEvent): void {}
 

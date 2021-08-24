@@ -4,8 +4,8 @@ import { Factory as FactoryContract } from "../../generated/templates/Pool/Facto
 
 export const ADDRESS_ZERO = "0x0000000000000000000000000000000000000000";
 export const FACTORY_ADDRESS = "0x1f98431c8ad98523631ae4a59f267346ea31f984";
-export const PILOT_ADDRESS = "0x37c997b35c619c21323f3518b9357914e8b99525";
-export const SNAPSHOT_ADDRESS = "0x341c9717f94a99c09480d523fd501b06cae6776f";
+export const PILOT_ADDRESS = "0x37c997b35c619c21323f3518b9357914e8b99525"; //rinkeby
+export const SNAPSHOT_ADDRESS = "0x1bDc812F518726eFc12E271261848104501784AF"; //"0x341c9717f94a99c09480d523fd501b06cae6776f" mainnet;
 
 export let ZERO_BI = BigInt.fromI32(0);
 export let ONE_BI = BigInt.fromI32(1);

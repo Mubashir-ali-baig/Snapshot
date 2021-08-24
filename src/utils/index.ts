@@ -131,6 +131,12 @@ export function getReservesFromLiquidity(
   if (!snapCall.reverted) {
     log.info("HERE IN INDEX IF,{}", [""]);
     return snapCall.value;
+  } else {
+    log.info("REVERTED: In ELSE,{},{},{}", [
+      liquidity.toString(),
+      tokenId.toString(),
+      pool.toHexString(),
+    ]);
   }
 
   return null;
