@@ -59,42 +59,6 @@ export class Pool extends Entity {
   set token1(value: string) {
     this.set("token1", Value.fromString(value));
   }
-
-  get feeTier(): BigInt {
-    let value = this.get("feeTier");
-    return value.toBigInt();
-  }
-
-  set feeTier(value: BigInt) {
-    this.set("feeTier", Value.fromBigInt(value));
-  }
-
-  get tickSpacing(): i32 {
-    let value = this.get("tickSpacing");
-    return value.toI32();
-  }
-
-  set tickSpacing(value: i32) {
-    this.set("tickSpacing", Value.fromI32(value));
-  }
-
-  get tickLower(): i32 {
-    let value = this.get("tickLower");
-    return value.toI32();
-  }
-
-  set tickLower(value: i32) {
-    this.set("tickLower", Value.fromI32(value));
-  }
-
-  get tickUpper(): i32 {
-    let value = this.get("tickUpper");
-    return value.toI32();
-  }
-
-  set tickUpper(value: i32) {
-    this.set("tickUpper", Value.fromI32(value));
-  }
 }
 
 export class Token extends Entity {
@@ -252,6 +216,15 @@ export class User extends Entity {
     this.set("tokenId", Value.fromBigInt(value));
   }
 
+  get userId(): string {
+    let value = this.get("userId");
+    return value.toString();
+  }
+
+  set userId(value: string) {
+    this.set("userId", Value.fromString(value));
+  }
+
   get pilotReserve(): BigDecimal {
     let value = this.get("pilotReserve");
     return value.toBigDecimal();
@@ -286,6 +259,46 @@ export class User extends Entity {
 
   set upperTick(value: BigInt) {
     this.set("upperTick", Value.fromBigInt(value));
+  }
+}
+
+export class UserList extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(id !== null, "Cannot save UserList entity without an ID");
+    assert(
+      id.kind == ValueKind.STRING,
+      "Cannot save UserList entity with non-string ID. " +
+        'Considering using .toHex() to convert the "id" to a string.'
+    );
+    store.set("UserList", id.toString(), this);
+  }
+
+  static load(id: string): UserList | null {
+    return store.get("UserList", id) as UserList | null;
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    return value.toString();
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get list(): Array<string> {
+    let value = this.get("list");
+    return value.toStringArray();
+  }
+
+  set list(value: Array<string>) {
+    this.set("list", Value.fromStringArray(value));
   }
 
   get lastSnapTimestamp(): BigInt {
@@ -328,15 +341,6 @@ export class UserReserveSnapshot extends Entity {
     this.set("id", Value.fromString(value));
   }
 
-  get block(): BigInt {
-    let value = this.get("block");
-    return value.toBigInt();
-  }
-
-  set block(value: BigInt) {
-    this.set("block", Value.fromBigInt(value));
-  }
-
   get totalPilot(): BigDecimal {
     let value = this.get("totalPilot");
     return value.toBigDecimal();
@@ -353,15 +357,6 @@ export class UserReserveSnapshot extends Entity {
 
   set pilotPercentage(value: BigDecimal) {
     this.set("pilotPercentage", Value.fromBigDecimal(value));
-  }
-
-  get liquidity(): BigInt {
-    let value = this.get("liquidity");
-    return value.toBigInt();
-  }
-
-  set liquidity(value: BigInt) {
-    this.set("liquidity", Value.fromBigInt(value));
   }
 
   get timestamp(): BigInt {
@@ -420,6 +415,15 @@ export class Position extends Entity {
 
   set pool(value: string) {
     this.set("pool", Value.fromString(value));
+  }
+
+  get tokenID(): BigInt {
+    let value = this.get("tokenID");
+    return value.toBigInt();
+  }
+
+  set tokenID(value: BigInt) {
+    this.set("tokenID", Value.fromBigInt(value));
   }
 
   get token0(): string {

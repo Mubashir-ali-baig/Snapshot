@@ -5,6 +5,7 @@ import { ERC20NameBytes } from "../../generated/Factory/ERC20NameBytes";
 import { StaticTokenDefinition } from "./staticTokenDefinition";
 import { BigInt, Address } from "@graphprotocol/graph-ts";
 import { isNullEthValue } from ".";
+import { Token } from "../../generated/schema";
 
 export function fetchTokenSymbol(tokenAddress: Address): string {
   let contract = ERC20.bind(tokenAddress);
@@ -92,4 +93,16 @@ export function fetchTokenDecimals(tokenAddress: Address): BigInt {
   }
 
   return BigInt.fromI32(decimalValue as i32);
+}
+
+export function MakeTokens(_token:Address):string{
+  let token = Token.load(_token.toHexString());
+  if(!token){
+    token = new Token(_token.toHexString());
+    token.name = fetchTokenName(_token);
+    token.symbol = fetchTokenSymbol(_token);
+    token.decimals = fetchTokenDecimals(_token);
+    token.save()
+  }
+  return token.id;
 }

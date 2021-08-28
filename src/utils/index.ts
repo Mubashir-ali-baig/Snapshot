@@ -19,7 +19,9 @@ import {
   ZERO_BD,
   ONE_BD,
   SNAPSHOT_ADDRESS,
+  PILOT_ADDRESS,
 } from "../utils/constants";
+import { User, UserList, UserReserveSnapshot } from "../../generated/schema";
 
 export function exponentToBigDecimal(decimals: BigInt): BigDecimal {
   let bd = BigDecimal.fromString("1");
@@ -131,6 +133,17 @@ export function getReservesFromLiquidity(
   if (!snapCall.reverted) {
     log.info("HERE IN INDEX IF,{}", [""]);
     return snapCall.value;
+  } else {
+    snapCall = snap.try_getReserves(pool, liquidity, tokenId);
+    log.info("HERE IN INDEX ELSE,{},{},{}", [
+    liquidity.toString(),
+    tokenId.toString(),
+    pool.toHexString(),
+  ]);
+    if (!snapCall.reverted) {
+      log.info("HERE IN INDEX E,{}", [""]);
+      return snapCall.value;
+    }
   }
 
   return null;
@@ -151,19 +164,39 @@ export function getCurrentTick(poolAddress: string): BigInt {
     log.info("HERE,{}", [tick.toString()]);
     return tick;
   }
+  
   return BigInt.fromI32(0);
 }
 
-export function createSnapshot(event: ethereum.Event): void {}
-//export function loadTransaction(event: ethereum.Event): Transaction {
-//  let transaction = Transaction.load(event.transaction.hash.toHexString());
-//  if (transaction === null) {
-//    transaction = new Transaction(event.transaction.hash.toHexString());
-//  }
-//  transaction.blockNumber = event.block.number;
-//  transaction.timestamp = event.block.timestamp;
-//  transaction.gasUsed = event.transaction.gasUsed;
-//  transaction.gasPrice = event.transaction.gasPrice;
-//  transaction.save();
-//  return transaction as Transaction;
-//}
+export function createSnapshot(currentTick:BigInt,currentTimestamp:BigInt): void {
+  let userList = UserList.load(PILOT_ADDRESS);
+  
+  let list = userList.list
+  let listSize = list.length;
+  for(let i = 0;i<listSize;i++){
+      let user = User.load(list[i]);
+      if(!user){
+        log.info("NOT USER,{}",[""])
+        continue;
+      }
+      if(currentTick.ge(user.lowerTick) && currentTick.le(user.upperTick)){
+        let snapList = user.snapshots;
+        
+        let snapId = user.id + "#" +currentTimestamp.toString();
+        let snap = new UserReserveSnapshot(snapId);
+        snap.totalPilot = user.pilotReserve
+        snap.pilotPercentage = snap.totalPilot.times(BigDecimal.fromString("0.01333333333"))
+        snap.timestamp = currentTimestamp;
+        snap.save();
+        snapList.push(snap.id);
+        user.snapshots = snapList;
+        user.save()
+      
+    }
+      
+    userList.lastSnapTimestamp = currentTimestamp;
+    userList.save()
+  }
+
+}
+

@@ -2,10 +2,6 @@ type Pool @entity {
   id: ID!
   token0: Token!
   token1: Token!
-  feeTier: BigInt!
-  tickSpacing: Int!
-  tickLower: Int
-  tickUpper: Int
 }
 
 type Token @entity {
@@ -25,19 +21,24 @@ type User @entity {
   id: ID!
   pool: String!
   tokenId: BigInt!
+  userId: String!
   pilotReserve: BigDecimal!
   snapshots: [UserReserveSnapshot!]!
   lowerTick: BigInt!
   upperTick: BigInt!
+  
+}
+
+type UserList @entity {
+  id: ID!
+  list: [String!]!
   lastSnapTimestamp: BigInt!
 }
 
 type UserReserveSnapshot @entity {
   id: ID!
-  block: BigInt!
   totalPilot: BigDecimal!
   pilotPercentage: BigDecimal!
-  liquidity: BigInt!
   timestamp: BigInt!
 }
 
@@ -49,6 +50,9 @@ type Position @entity {
   owner: Bytes!
   # pool position is within
   pool: Pool!
+
+  tokenID: BigInt!
+
   # allow indexing by tokens
   token0: Token!
   # allow indexing by tokens
