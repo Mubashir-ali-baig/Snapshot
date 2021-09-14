@@ -5,7 +5,7 @@
     "codegen": "graph codegen",
     "build": "graph build",
     "auth": "graph auth https://api.thegraph.com/deploy/ 0352ad8ea2c347bc9816c70841f1784c",
-    "deploy": "graph deploy --node https://api.thegraph.com/deploy/ --ipfs https://api.thegraph.com/ipfs/ mubashir-ali-baig/unipilot-snapshot",
+    "deploy": "graph deploy --node https://api.thegraph.com/deploy/ --ipfs https://api.thegraph.com/ipfs/ mubashir-ali-baig/snapshot-debug",
     "create-local": "graph create --node http://localhost:8020/ mubashir-ali-baig/unipilot-snapshot",
     "remove-local": "graph remove --node http://localhost:8020/ mubashir-ali-baig/unipilot-snapshot",
     "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 mubashir-ali-baig/unipilot-snapshot"

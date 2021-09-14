@@ -234,6 +234,24 @@ export class User extends Entity {
     this.set("pilotReserve", Value.fromBigDecimal(value));
   }
 
+  get otherToken(): BigDecimal {
+    let value = this.get("otherToken");
+    return value.toBigDecimal();
+  }
+
+  set otherToken(value: BigDecimal) {
+    this.set("otherToken", Value.fromBigDecimal(value));
+  }
+
+  get liquidity(): BigInt {
+    let value = this.get("liquidity");
+    return value.toBigInt();
+  }
+
+  set liquidity(value: BigInt) {
+    this.set("liquidity", Value.fromBigInt(value));
+  }
+
   get snapshots(): Array<string> {
     let value = this.get("snapshots");
     return value.toStringArray();
@@ -259,6 +277,24 @@ export class User extends Entity {
 
   set upperTick(value: BigInt) {
     this.set("upperTick", Value.fromBigInt(value));
+  }
+
+  get updateTimestamp(): BigInt {
+    let value = this.get("updateTimestamp");
+    return value.toBigInt();
+  }
+
+  set updateTimestamp(value: BigInt) {
+    this.set("updateTimestamp", Value.fromBigInt(value));
+  }
+
+  get eligible(): boolean {
+    let value = this.get("eligible");
+    return value.toBoolean();
+  }
+
+  set eligible(value: boolean) {
+    this.set("eligible", Value.fromBoolean(value));
   }
 }
 
@@ -366,6 +402,46 @@ export class UserReserveSnapshot extends Entity {
 
   set timestamp(value: BigInt) {
     this.set("timestamp", Value.fromBigInt(value));
+  }
+}
+
+export class RangeStatus extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(id !== null, "Cannot save RangeStatus entity without an ID");
+    assert(
+      id.kind == ValueKind.STRING,
+      "Cannot save RangeStatus entity with non-string ID. " +
+        'Considering using .toHex() to convert the "id" to a string.'
+    );
+    store.set("RangeStatus", id.toString(), this);
+  }
+
+  static load(id: string): RangeStatus | null {
+    return store.get("RangeStatus", id) as RangeStatus | null;
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    return value.toString();
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get outOfRange(): boolean {
+    let value = this.get("outOfRange");
+    return value.toBoolean();
+  }
+
+  set outOfRange(value: boolean) {
+    this.set("outOfRange", Value.fromBoolean(value));
   }
 }
 

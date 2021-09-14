@@ -23,10 +23,13 @@ type User @entity {
   tokenId: BigInt!
   userId: String!
   pilotReserve: BigDecimal!
+  otherToken: BigDecimal!
+  liquidity: BigInt!
   snapshots: [UserReserveSnapshot!]!
   lowerTick: BigInt!
   upperTick: BigInt!
-  
+  updateTimestamp: BigInt!
+  eligible:Boolean
 }
 
 type UserList @entity {
@@ -40,6 +43,11 @@ type UserReserveSnapshot @entity {
   totalPilot: BigDecimal!
   pilotPercentage: BigDecimal!
   timestamp: BigInt!
+}
+
+type RangeStatus @entity{
+  id:ID!
+  outOfRange: Boolean!
 }
 
 type Position @entity {

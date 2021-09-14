@@ -20,8 +20,19 @@ import {
   ONE_BD,
   SNAPSHOT_ADDRESS,
   PILOT_ADDRESS,
+  POOL_ADDR,
+  
+  MONTH_LIST,
+  GENESIS_TIMESTAMP,
+  getDays,
 } from "../utils/constants";
-import { User, UserList, UserReserveSnapshot } from "../../generated/schema";
+import {
+  RangeStatus,
+  User,
+  UserList,
+  UserReserveSnapshot,
+  Snapshot as Snap,
+} from "../../generated/schema";
 
 export function exponentToBigDecimal(decimals: BigInt): BigDecimal {
   let bd = BigDecimal.fromString("1");
@@ -119,7 +130,7 @@ export function getReservesFromLiquidity(
   pool: Address,
   liquidity: BigInt,
   tokenId: BigInt
-): SnapshotHelper__getReservesResult {
+): SnapshotHelper__getReservesResult | null {
   let snap = SnapshotHelper.bind(
     Address.fromString("0x341c9717f94a99c09480d523fd501b06cae6776f")
   );
@@ -136,10 +147,10 @@ export function getReservesFromLiquidity(
   } else {
     snapCall = snap.try_getReserves(pool, liquidity, tokenId);
     log.info("HERE IN INDEX ELSE,{},{},{}", [
-    liquidity.toString(),
-    tokenId.toString(),
-    pool.toHexString(),
-  ]);
+      liquidity.toString(),
+      tokenId.toString(),
+      pool.toHexString(),
+    ]);
     if (!snapCall.reverted) {
       log.info("HERE IN INDEX E,{}", [""]);
       return snapCall.value;
@@ -157,46 +168,137 @@ export function getReservesFromLiquidity(
 //}
 export function getCurrentTick(poolAddress: string): BigInt {
   let pool = PoolInstance.bind(Address.fromString(poolAddress));
-  let slotCall = pool.try_slot0();
-  if (!slotCall.reverted) {
-    let slotResult = slotCall.value;
-    let tick = BigInt.fromI32(slotResult.value1);
-    log.info("HERE,{}", [tick.toString()]);
-    return tick;
+  if (pool) {
+    let slotCall = pool.try_slot0();
+    if (!slotCall.reverted) {
+      let slotResult = slotCall.value;
+      let tick = BigInt.fromI32(slotResult.value1);
+      log.info("HERE,{}", [tick.toString()]);
+      return tick;
+    }
   }
-  
   return BigInt.fromI32(0);
 }
 
-export function createSnapshot(currentTick:BigInt,currentTimestamp:BigInt): void {
+export function createSnapshot(currentTimestamp: BigInt): void {
   let userList = UserList.load(PILOT_ADDRESS);
-  
-  let list = userList.list
-  let listSize = list.length;
-  for(let i = 0;i<listSize;i++){
-      let user = User.load(list[i]);
-      if(!user){
-        log.info("NOT USER,{}",[""])
-        continue;
-      }
-      if(currentTick.ge(user.lowerTick) && currentTick.le(user.upperTick)){
-        let snapList = user.snapshots;
-        
-        let snapId = user.id + "#" +currentTimestamp.toString();
-        let snap = new UserReserveSnapshot(snapId);
-        snap.totalPilot = user.pilotReserve
-        snap.pilotPercentage = snap.totalPilot.times(BigDecimal.fromString("0.01333333333"))
-        snap.timestamp = currentTimestamp;
-        snap.save();
-        snapList.push(snap.id);
-        user.snapshots = snapList;
-        user.save()
-      
-    }
-      
-    userList.lastSnapTimestamp = currentTimestamp;
-    userList.save()
-  }
+  if (userList) {
+    if (
+      currentTimestamp.minus(userList.lastSnapTimestamp) > BigInt.fromI32(86400)
+    ) {
+      let list = userList.list;
+      let listSize = list.length;
+      for (let i = 0; i < listSize; i++) {
+        let user = User.load(list[i]);
+        if (!user || !user.eligible) {
+          log.info("NOT USER,{}", [""]);
+          continue;
+        }
+        if (user.pool == POOL_ADDR) {
+          let currentTick = getCurrentTick(user.pool);
+          if (
+            currentTick.ge(user.lowerTick) &&
+            currentTick.le(user.upperTick)
+          ) {
+            if (user.liquidity.gt(ZERO_BI) && user.pilotReserve == ZERO_BD) {
+              let snapResult = getReservesFromLiquidity(
+                Address.fromString(user.pool),
+                user.liquidity,
+                user.tokenId
+              );
+              if (snapResult) {
+                if (user.pool == POOL_ADDR) {
+                  user.pilotReserve = snapResult.value0.toBigDecimal();
+                  user.otherToken = snapResult.value1.toBigDecimal();
+                  user.updateTimestamp = currentTimestamp;
+                  user.save();
+                }
+              }
+            }
+            let snapList = user.snapshots;
 
+            let snapId = user.id + "#" + currentTimestamp.toString();
+            let snap = new UserReserveSnapshot(snapId);
+            snap.totalPilot = user.pilotReserve;
+         
+            let timeRange = currentTimestamp.minus(BigInt.fromI32(GENESIS_TIMESTAMP)).div(BigInt.fromI32(86400))
+            let days = getDays(timeRange);
+            snap.pilotPercentage = snap.totalPilot.times(
+              BigDecimal.fromString("0.4").div(BigDecimal.fromString(days.toString()))
+            );
+
+            snap.timestamp = currentTimestamp;
+            snap.save();
+            snapList.push(snap.id);
+
+            user.snapshots = snapList;
+            user.save();
+          } else {
+            let snapList = user.snapshots;
+            let snapId = user.id + "#" + currentTimestamp.toString();
+            let snap = new UserReserveSnapshot(snapId);
+            snap.totalPilot = BigDecimal.fromString("0");
+            snap.pilotPercentage = BigDecimal.fromString("0");
+            snap.timestamp = currentTimestamp;
+            snap.save();
+            snapList.push(snap.id);
+            user.snapshots = snapList;
+            user.save();
+          }
+
+          userList.lastSnapTimestamp = currentTimestamp;
+          userList.save();
+        }
+      }
+    }
+  }
 }
 
+export function updateRangeStatus(currentTimestamp: BigInt): void {
+  let userList = UserList.load(PILOT_ADDRESS);
+  if (userList) {
+    let list = userList.list;
+    let listSize = list.length;
+    for (let i = 0; i < listSize; i++) {
+      let user = User.load(list[i]);
+      if (!user) {
+        log.info("NOT USER,{}", [""]);
+        continue;
+      }
+      if (user.pool == POOL_ADDR) {
+        let rangeStatus = new RangeStatus(
+          user.id + "#" + currentTimestamp.toString()
+        );
+        let currentTick = getCurrentTick(user.pool);
+
+        if (currentTick.ge(user.lowerTick) && currentTick.le(user.upperTick)) {
+          rangeStatus.outOfRange = false;
+        } else {
+          rangeStatus.outOfRange = true;
+          let snapList = user.snapshots;
+          if (snapList.length > 0) {
+            let snapValue = UserReserveSnapshot.load(
+              snapList[snapList.length - 1]
+            );
+            if (
+              currentTimestamp
+                .minus(snapValue.timestamp)
+                .gt(BigInt.fromI32(86400))
+            ) {
+              let snapId = user.id + "#" + currentTimestamp.toString();
+              let snap = new UserReserveSnapshot(snapId);
+              snap.totalPilot = BigDecimal.fromString("0");
+              snap.pilotPercentage = BigDecimal.fromString("0");
+              snap.timestamp = currentTimestamp;
+              snap.save();
+              snapList.push(snap.id);
+              user.snapshots = snapList;
+              user.save();
+            }
+          }
+        }
+        rangeStatus.save();
+      }
+    }
+  }
+}
